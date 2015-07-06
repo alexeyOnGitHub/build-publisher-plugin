@@ -1,0 +1,46 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'http://repo.jenkins-ci.org/releases/'
+        }
+    }
+    dependencies {
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.12.1'
+    }
+}
+
+apply plugin: 'org.jenkins-ci.jpi'
+
+
+group = "org.jenkins-ci.plugins"
+version = "0.0.1-SNAPSHOT"
+description = "Jenkins Publisher Plugin. Publish notifications about each completed build to RabbitMQ."
+
+dependencies {
+    // for RabbitMQ Publisher
+    compile('com.rabbitmq:amqp-client:3.5.3')
+
+    testCompile(
+            'junit:junit:4.12',
+            // can't use AssertJ because it requires Java 8, which is not supported for Jenkins Plugins
+            'org.assertj:assertj-core:2.1.0'
+    )
+}
+
+jenkinsPlugin {
+    // Version of Jenkins core this plugin depends on.
+    coreVersion = '1.580.3'
+    displayName = 'Jenkins Publisher Plugin'                // Human-readable name of plugin.
+    url = 'https://github.com/alexeyOnGitHub/jenkins-publisher-plugin'   // URL for plugin on Jenkins wiki or elsewhere.
+    gitHubUrl = 'https://github.com/alexeyOnGitHub/jenkins-publisher-plugin'  // Plugin URL on GitHub. Optional.
+
+    // The developers section is optional, and corresponds to the POM developers section.
+    developers {
+        developer {
+            id 'askorokhodov'
+            name 'Alexey Skorokhodov'
+            email 'alskor@gmail.com'
+        }
+    }
+}

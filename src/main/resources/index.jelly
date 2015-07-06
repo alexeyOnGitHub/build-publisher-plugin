@@ -1,0 +1,3 @@
+<div>
+Publish notifications for all completed builds to a RabbitMQ instance.
+</div>
