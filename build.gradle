@@ -20,7 +20,9 @@ description = "Jenkins Publisher Plugin. Publish notifications about each comple
 dependencies {
     // for RabbitMQ Publisher
     compile('com.rabbitmq:amqp-client:3.5.3',
-            'org.json:json:20141113')
+            // note: newer version of "json" library (like 20141113) require Java 8+,
+            // which we can't use in Jenkins.
+            'org.json:json:20140107')
 
     testCompile(
             'junit:junit:4.12',
