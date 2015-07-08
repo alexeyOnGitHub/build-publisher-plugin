@@ -19,7 +19,8 @@ description = "Jenkins Publisher Plugin. Publish notifications about each comple
 
 dependencies {
     // for RabbitMQ Publisher
-    compile('com.rabbitmq:amqp-client:3.5.3')
+    compile('com.rabbitmq:amqp-client:3.5.3',
+            'org.json:json:20141113')
 
     testCompile(
             'junit:junit:4.12',

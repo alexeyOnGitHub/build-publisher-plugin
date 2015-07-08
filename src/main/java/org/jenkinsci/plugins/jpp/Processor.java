@@ -79,12 +79,8 @@ final class Processor {
      * this is a fast operation to add the outgoing message to processing queue.
      * it is thread safe.
      */
-    boolean addToOutgoingQueue(String jenkinsRootUrl, String displayName, int number) {
-        final MessageBuilder builder = new MessageBuilder()
-                .jenkinsUrl(jenkinsRootUrl)
-                .jobName(displayName)
-                .buildNumber(number);
-        return messageQueue.offer(builder.buildString());
+    boolean addToOutgoingQueue(String message) {
+        return messageQueue.offer(message);
     }
 
 }

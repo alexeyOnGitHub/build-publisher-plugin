@@ -13,7 +13,6 @@ public class MessageBuilderTest {
                 .jobName("sample-task")
                 .buildNumber(1)
                 .buildString();
-        assertThat(message).isEqualTo("{job_repository_url:http://mysite.com|job_name:sample-task|build_number:1}");
+        assertThat(message).isEqualTo("{\"jenkins_url\":\"http://mysite.com\",\"job_name\":\"sample-task\",\"build_number\":1}");
     }
-
 }

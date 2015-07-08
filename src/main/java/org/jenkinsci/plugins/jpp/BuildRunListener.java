@@ -72,8 +72,13 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
     private void processBuildCompletedEvent(Run run) throws IOException, TimeoutException {
         final Job job = run.getParent();
+        final MessageBuilder builder = new MessageBuilder()
+                .jenkinsUrl(getJenkinsRootUrl())
+                .jobName(job.getDisplayName())
+                .buildNumber(run.getNumber());
+        final String message = builder.buildString();
 
-        boolean added = processor.addToOutgoingQueue(getJenkinsRootUrl(), job.getDisplayName(), run.getNumber());
+        boolean added = processor.addToOutgoingQueue(message);
         if (added) {
             LOG.log(Level.INFO, run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");
         } else {
