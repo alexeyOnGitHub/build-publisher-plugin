@@ -30,18 +30,20 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
 
     public BuildRunListener() {
-        LOG.info("BuildRunListener: starting...");
-        final DescriptorImpl descriptor = getDescriptor();
-        final RabbitMQPublisher publisher = new RabbitMQPublisher(descriptor.getRabbitMqServerName(),
-                descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqExchangeName());
+        final RabbitMQPublisher publisher = createRabbitMQPublisher();
         processor = new Processor(publisher, QUEUE_SIZE);
         processor.start();
-        LOG.info("BuildRunListener: started.");
+    }
+
+    private RabbitMQPublisher createRabbitMQPublisher() {
+        final DescriptorImpl descriptor = getDescriptor();
+        return new RabbitMQPublisher(descriptor.getRabbitMqServerName(),
+                descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqExchangeName());
     }
 
     @Override
     public DescriptorImpl getDescriptor() {
-        // yes, apparently have to recreate the object each time. otherwise it does not get updates!
+        // yes, apparently have to recreate the object each time. otherwise it does not get updates(???!!)
         return new DescriptorImpl();
     }
 
@@ -53,7 +55,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     public void onCompleted(Run run, @Nonnull TaskListener listener) {
         boolean enabled = getDescriptor().isEnabled();
         if (enabled) {
-            LOG.fine("plugin is enabled. starting processing");
+            LOG.fine("plugin is enabled. processing: " + run.getFullDisplayName());
 
             try {
                 processBuildCompletedEvent(run);
@@ -61,12 +63,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
                 LOG.log(Level.SEVERE, "Exception while processing 'completed build' request:" + e.toString(), e);
             }
         } else {
-            try {
-                processor.stop();
-            } catch (InterruptedException e) {
-                LOG.log(Level.SEVERE, "Exception while stopping Processor instance:" + e.toString(), e);
-            }
-            LOG.info(" Jenkins Publisher Plugin is not enabled");
+            LOG.fine("onCompleted: plugin is NOT enabled. ignoring: " + run.getFullDisplayName());
         }
     }
 
@@ -78,6 +75,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
                 .buildNumber(run.getNumber());
         final String message = builder.buildString();
 
+        processor.setPublisher(createRabbitMQPublisher());
         boolean added = processor.addToOutgoingQueue(message);
         if (added) {
             LOG.info(run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");

@@ -22,19 +22,24 @@ final class Processor {
      * BlockingQueue is thread safe, so there is no need in using manual locks.
      */
     private final BlockingQueue<String> messageQueue;
+    private final MyRunnable myRunnable;
 
-    private final RabbitMQPublisher publisher;
+    private boolean started = false;
 
     Processor(final RabbitMQPublisher publisher, int queueSize) {
-        this.publisher = publisher;
         messageQueue = new ArrayBlockingQueue<>(queueSize);
         service = Executors.newFixedThreadPool(NUMBER_OF_EXECUTORS);
+        myRunnable = new MyRunnable(publisher);
     }
 
-    private class Processing implements Runnable {
-        private final RabbitMQPublisher publisher;
+    public void setPublisher(RabbitMQPublisher publisher) {
+        myRunnable.setPublisher(publisher);
+    }
 
-        public Processing(RabbitMQPublisher publisher) {
+    private class MyRunnable implements Runnable {
+        private volatile RabbitMQPublisher publisher;
+
+        public MyRunnable(RabbitMQPublisher publisher) {
             this.publisher = publisher;
         }
 
@@ -61,19 +66,27 @@ final class Processor {
                 }
             }
         }
+
+        public void setPublisher(RabbitMQPublisher publisher) {
+            this.publisher = publisher;
+        }
     }
 
     void start() {
-        final Thread thread = new Thread(new Processing(publisher));
+        if (started) {
+            throw new IllegalStateException("Already started. Cannot start Processor class again");
+        }
+        final Thread thread = new Thread(myRunnable);
         thread.setDaemon(true);
         thread.start();
+        started = true;
     }
 
-    void stop() throws InterruptedException {
-        messageQueue.put(STOP_MESSAGE);
-        service.shutdown();
-        service.awaitTermination(1, TimeUnit.MINUTES);
-    }
+//    void stop() throws InterruptedException {
+//        messageQueue.put(STOP_MESSAGE);
+//        service.shutdown();
+//        service.awaitTermination(1, TimeUnit.MINUTES);
+//    }
 
     /**
      * this is a fast operation to add the outgoing message to processing queue.
