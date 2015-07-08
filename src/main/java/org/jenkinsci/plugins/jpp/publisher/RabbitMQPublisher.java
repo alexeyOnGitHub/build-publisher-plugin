@@ -26,7 +26,7 @@ public final class RabbitMQPublisher {
     }
 
     public void publish(String message) throws IOException, TimeoutException {
-        LOG.info("RabbitMQPublisher: will publish to exchange called '" + exchangeName + "'");
+        LOG.info("will publish to Exchange '" + exchangeName + "' on " + factory.getHost());
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 

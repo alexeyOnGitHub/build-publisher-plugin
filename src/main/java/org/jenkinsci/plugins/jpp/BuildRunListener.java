@@ -30,13 +30,13 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
 
     public BuildRunListener() {
-        LOG.log(Level.INFO, "JPP BuildRunListener: starting...");
+        LOG.info("BuildRunListener: starting...");
         final DescriptorImpl descriptor = getDescriptor();
         final RabbitMQPublisher publisher = new RabbitMQPublisher(descriptor.getRabbitMqServerName(),
                 descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqExchangeName());
         processor = new Processor(publisher, QUEUE_SIZE);
         processor.start();
-        LOG.log(Level.INFO, "JPP BuildRunListener: started.");
+        LOG.info("BuildRunListener: started.");
     }
 
     @Override
@@ -53,20 +53,20 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     public void onCompleted(Run run, @Nonnull TaskListener listener) {
         boolean enabled = getDescriptor().isEnabled();
         if (enabled) {
-            LOG.log(Level.FINE, "JPP: is enabled. starting processing");
+            LOG.fine("plugin is enabled. starting processing");
 
             try {
                 processBuildCompletedEvent(run);
             } catch (Throwable e) {
-                LOG.log(Level.WARNING, "Exception while processing 'completed build' request:" + e.toString(), e);
+                LOG.log(Level.SEVERE, "Exception while processing 'completed build' request:" + e.toString(), e);
             }
         } else {
             try {
                 processor.stop();
             } catch (InterruptedException e) {
-                LOG.log(Level.WARNING, "Exception while stopping Processor instance:" + e.toString(), e);
+                LOG.log(Level.SEVERE, "Exception while stopping Processor instance:" + e.toString(), e);
             }
-            LOG.log(Level.INFO, " Jenkins Publisher Plugin is not enabled");
+            LOG.info(" Jenkins Publisher Plugin is not enabled");
         }
     }
 
@@ -80,9 +80,9 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
         boolean added = processor.addToOutgoingQueue(message);
         if (added) {
-            LOG.log(Level.INFO, run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");
+            LOG.info(run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");
         } else {
-            LOG.log(Level.WARNING, run.getFullDisplayName() + " CANNOT add to the outgoing Jenkins queue, it is full. this build will be ignored");
+            LOG.warning(run.getFullDisplayName() + " CANNOT add to the outgoing Jenkins queue, it is full. this build will be ignored");
         }
     }
 
@@ -114,7 +114,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             rabbitMqServerPort = formData.getInt("rabbitMqServerPort");
             rabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
             save();
-
+            LOG.info("Config updated. TODO: restart processor with the new data");
             // TODO restart Processor with the new data?
             return super.configure(req, formData);
         }
