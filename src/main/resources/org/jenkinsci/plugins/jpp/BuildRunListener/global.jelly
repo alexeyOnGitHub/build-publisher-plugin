@@ -21,8 +21,8 @@
     <f:entry title="RabbitMQ server port" field="rabbitMqServerPort">
        <f:textbox default="5672"/>
     </f:entry>
-    <f:entry title="RabbitMQ queue name" field="rabbitMqQueueName">
-       <f:textbox />
+    <f:entry title="RabbitMQ exchange name" field="rabbitMqExchangeName">
+       <f:textbox default="jenkins-exchange"/>
     </f:entry>
   </f:section>
 </j:jelly>

@@ -11,7 +11,6 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -33,7 +32,8 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     public BuildRunListener() {
         LOG.log(Level.INFO, "JPP BuildRunListener: starting...");
         final DescriptorImpl descriptor = getDescriptor();
-        final RabbitMQPublisher publisher = new RabbitMQPublisher(descriptor.getRabbitMqServerName(), descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqQueueName());
+        final RabbitMQPublisher publisher = new RabbitMQPublisher(descriptor.getRabbitMqServerName(),
+                descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqExchangeName());
         processor = new Processor(publisher, QUEUE_SIZE);
         processor.start();
         LOG.log(Level.INFO, "JPP BuildRunListener: started.");
@@ -75,9 +75,9 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
         boolean added = processor.addToOutgoingQueue(getJenkinsRootUrl(), job.getDisplayName(), run.getNumber());
         if (added) {
-            LOG.log(Level.INFO, run.getFullDisplayName() + " - Added to the Queue");
+            LOG.log(Level.INFO, run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");
         } else {
-            LOG.log(Level.WARNING, run.getFullDisplayName() + " CANNOT add to the outgoing queue, it is full. this build will be ignored");
+            LOG.log(Level.WARNING, run.getFullDisplayName() + " CANNOT add to the outgoing Jenkins queue, it is full. this build will be ignored");
         }
     }
 
@@ -91,7 +91,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         private volatile boolean enabled;
         private volatile String rabbitMqServerName;
         private volatile int rabbitMqServerPort;
-        private volatile String rabbitMqQueueName;
+        private volatile String rabbitMqExchangeName;
 
         public DescriptorImpl() {
             load();
@@ -107,7 +107,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             rabbitMqServerName = formData.getString("rabbitMqServerName");
             // we know it's a number because it passed validation
             rabbitMqServerPort = formData.getInt("rabbitMqServerPort");
-            rabbitMqQueueName = formData.getString("rabbitMqQueueName");
+            rabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
             save();
 
             // TODO restart Processor with the new data?
@@ -134,10 +134,10 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckRabbitMqQueueName(@QueryParameter String value) {
+        public FormValidation doCheckRabbitMqExchangeName(@QueryParameter String value) {
             final String trimmedValue = value.trim();
             if (trimmedValue.isEmpty()) {
-                return FormValidation.error("Queue name cannot be empty");
+                return FormValidation.error("Please provide a valid existing RabbitMQ Exchange name.");
             }
             return FormValidation.ok();
         }
@@ -154,8 +154,8 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             return rabbitMqServerPort;
         }
 
-        public String getRabbitMqQueueName() {
-            return rabbitMqQueueName;
+        public String getRabbitMqExchangeName() {
+            return rabbitMqExchangeName;
         }
     }
 
