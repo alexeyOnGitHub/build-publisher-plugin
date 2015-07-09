@@ -7,6 +7,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
 import org.kohsuke.stapler.QueryParameter;
@@ -14,6 +15,8 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,6 +34,15 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         final RabbitMQPublisher publisher = createRabbitMQPublisher();
         processor = new Processor(publisher, QUEUE_SIZE);
         processor.start();
+        getDescriptor().addListener(new RabbitMqConfigurationChangeListener() {
+            @Override
+            public void onChanged(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName) {
+                LOG.info("RabbitMQ configuration was changed, updating the running thread. New values: server=" +
+                        rabbitMqServerName + " port=" + rabbitMqServerPort + " exchange=" + rabbitMqExchangeName);
+                LOG.info("processor = " + processor);
+                processor.setPublisher(createRabbitMQPublisher());
+            }
+        });
     }
 
     private RabbitMQPublisher createRabbitMQPublisher() {
@@ -41,8 +53,9 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
     @Override
     public DescriptorImpl getDescriptor() {
-        // yes, apparently have to recreate the object each time. otherwise it does not get updates(???!!)
-        return new DescriptorImpl();
+        // requesting an instance from Jenkins rather than creating a new copy,
+        // otherwise our own copy won't get updates when config is updated in Jenkins Configuration page.
+        return (DescriptorImpl) Jenkins.getInstance().getDescriptor(getClass());
     }
 
     @Override
@@ -69,7 +82,6 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         final boolean includePublishedTestResults = getDescriptor().isIncludePublishedTestResults();
         final String message = BuildMessageBuilder.buildMessage(run, includePublishedTestResults);
 
-        processor.setPublisher(createRabbitMQPublisher());
         boolean added = processor.addToOutgoingQueue(message);
         if (added) {
             LOG.info(run.getFullDisplayName() + " - Added to the local Jenkins queue to be processed in a separate thread.");
@@ -78,8 +90,17 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         }
     }
 
+    private interface RabbitMqConfigurationChangeListener {
+        void onChanged(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName);
+    }
+
     @Extension
     public static final class DescriptorImpl extends Descriptor<BuildRunListener> {
+
+        /**
+         * thread-safe implementation to prevent ConcurrentModificationExceptions.
+         */
+        private final transient List<RabbitMqConfigurationChangeListener> listeners = new CopyOnWriteArrayList<>();
 
         private volatile boolean enabled;
         private volatile boolean includePublishedTestResults;
@@ -91,24 +112,48 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             load();
         }
 
+        @Override
         public String getDisplayName() {
             return "Jenkins Publish Plugin";
+        }
+
+        void addListener(RabbitMqConfigurationChangeListener listener) {
+            listeners.add(listener);
         }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
             enabled = formData.getBoolean("enabled");
-            rabbitMqServerName = formData.getString("rabbitMqServerName");
-            // we know it's a number because it passed validation
-            rabbitMqServerPort = formData.getInt("rabbitMqServerPort");
-            rabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
 
             includePublishedTestResults = formData.getBoolean("includePublishedTestResults");
 
+            processRabbitMqConfiguration(formData);
             save();
-            LOG.info("Config updated. TODO: restart processor with the new data");
-            // TODO restart Processor with the new data?
             return super.configure(req, formData);
+        }
+
+        private void processRabbitMqConfiguration(JSONObject formData) {
+            final String newRabbitMqServerName = formData.getString("rabbitMqServerName");
+            // we know it's a number because it passed validation
+            final int newRabbitMqServerPort = formData.getInt("rabbitMqServerPort");
+            final String newRabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
+
+            if (!
+                    (newRabbitMqServerName.equals(rabbitMqServerName)
+                            && newRabbitMqServerPort == rabbitMqServerPort
+                            && newRabbitMqExchangeName.equals(rabbitMqExchangeName))) {
+                // at least one parameter is changed
+                rabbitMqServerName = newRabbitMqServerName;
+                rabbitMqServerPort = newRabbitMqServerPort;
+                rabbitMqExchangeName = newRabbitMqExchangeName;
+                notifyListeners(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+            }
+        }
+
+        private void notifyListeners(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName) {
+            for (RabbitMqConfigurationChangeListener listener : listeners) {
+                listener.onChanged(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+            }
         }
 
         public FormValidation doCheckRabbitMqServerName(@QueryParameter String value) {
