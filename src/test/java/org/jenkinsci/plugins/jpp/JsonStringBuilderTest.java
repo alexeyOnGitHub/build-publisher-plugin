@@ -4,11 +4,11 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MessageBuilderTest {
+public class JsonStringBuilderTest {
 
     @Test
     public void standardMessageCanBeCreated() {
-        final String message = new MessageBuilder()
+        final String message = new JsonStringBuilder()
                 .jenkinsUrl("http://mysite.com")
                 .jobName("sample-task")
                 .buildNumber(1)

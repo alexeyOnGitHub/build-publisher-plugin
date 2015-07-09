@@ -7,26 +7,33 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class MessageBuilder {
+public final class JsonStringBuilder {
 
     private final static String JENKINS_URL = "jenkins_url";
     private final static String BUILD_JOB_NAME = "job_name";
     private final static String BUILD_NUMBER = "build_number";
+    private final static String RESULT = "result";
 
     private final Map<String, Object> map = new HashMap<>();
+    private final Map<String, Object> parametersMap = new HashMap<>();
 
-    public MessageBuilder jenkinsUrl(String url) {
+    public JsonStringBuilder jenkinsUrl(String url) {
         map.put(JENKINS_URL, url);
         return this;
     }
 
-    public MessageBuilder jobName(String jobName) {
+    public JsonStringBuilder jobName(String jobName) {
         map.put(BUILD_JOB_NAME, jobName);
         return this;
     }
 
-    public MessageBuilder buildNumber(int buildNumber) {
+    public JsonStringBuilder buildNumber(int buildNumber) {
         map.put(BUILD_NUMBER, buildNumber);
+        return this;
+    }
+
+    public JsonStringBuilder result(String result) {
+        map.put(RESULT, result);
         return this;
     }
 
@@ -38,12 +45,29 @@ public final class MessageBuilder {
             addIfNotNull(writer, JENKINS_URL, (String) map.get(JENKINS_URL));
             addIfNotNull(writer, BUILD_JOB_NAME, (String) map.get(BUILD_JOB_NAME));
             addIfNotNull(writer, BUILD_NUMBER, (Integer) map.get(BUILD_NUMBER));
+            addIfNotNull(writer, RESULT, (String) map.get(RESULT));
+
+            addParametersIfPresent(writer);
             writer.endObject();
         } catch (JSONException e) {
             throw new RuntimeException("Unexpected JSONException", e);
         }
 
         return swriter.toString();
+    }
+
+    private void addParametersIfPresent(JSONWriter writer) {
+        if (!parametersMap.isEmpty()) {
+            addParameters(writer);
+        }
+    }
+
+    private void addParameters(JSONWriter writer) {
+        writer.key("parameters").object();
+        for (Map.Entry<String, Object> entry : parametersMap.entrySet()) {
+            writer.key(entry.getKey().toString()).value(entry.getValue());
+        }
+        writer.endObject();
     }
 
     private static void addIfNotNull(JSONWriter writer, String field, String value) throws JSONException {
@@ -61,4 +85,8 @@ public final class MessageBuilder {
         writer.value(value);
     }
 
+    public JsonStringBuilder parameter(String name, Object value) {
+        parametersMap.put(name, value);
+        return this;
+    }
 }

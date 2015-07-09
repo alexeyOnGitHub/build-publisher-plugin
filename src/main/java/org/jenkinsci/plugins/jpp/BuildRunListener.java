@@ -3,12 +3,10 @@ package org.jenkinsci.plugins.jpp;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.util.FormValidation;
-import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
 import org.kohsuke.stapler.QueryParameter;
@@ -68,12 +66,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     }
 
     private void processBuildCompletedEvent(Run run) throws IOException, TimeoutException {
-        final Job job = run.getParent();
-        final MessageBuilder builder = new MessageBuilder()
-                .jenkinsUrl(getJenkinsRootUrl())
-                .jobName(job.getDisplayName())
-                .buildNumber(run.getNumber());
-        final String message = builder.buildString();
+        final String message = BuildMessageBuilder.buildMessage(run);
 
         processor.setPublisher(createRabbitMQPublisher());
         boolean added = processor.addToOutgoingQueue(message);
@@ -82,10 +75,6 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         } else {
             LOG.warning(run.getFullDisplayName() + " CANNOT add to the outgoing Jenkins queue, it is full. this build will be ignored");
         }
-    }
-
-    private static String getJenkinsRootUrl() {
-        return Jenkins.getInstance().getRootUrl();
     }
 
     @Extension
