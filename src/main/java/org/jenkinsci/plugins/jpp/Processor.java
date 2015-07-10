@@ -6,7 +6,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 final class Processor {
@@ -24,7 +23,7 @@ final class Processor {
     private final BlockingQueue<String> messageQueue;
     private final MyRunnable myRunnable;
 
-    private boolean started = false;
+    private volatile boolean started = false;
 
     Processor(final RabbitMQPublisher publisher, int queueSize) {
         messageQueue = new ArrayBlockingQueue<>(queueSize);
@@ -72,7 +71,10 @@ final class Processor {
         }
     }
 
-    void start() {
+    /**
+     * Synchronized to prevent starting the thread several times from several threads.
+     */
+    synchronized void start() {
         if (started) {
             throw new IllegalStateException("Already started. Cannot start Processor class again");
         }
