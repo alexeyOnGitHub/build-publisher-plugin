@@ -24,6 +24,9 @@ dependencies {
             // which we can't use in Jenkins.
             'org.json:json:20140107')
 
+    // need AbstractTestResultAction class from JUnit Plugin to load "published" Test Results
+    jenkinsPlugins 'org.jenkins-ci.plugins:junit:1.6@jar'
+
     testCompile(
             'junit:junit:4.12',
             // can't use AssertJ because it requires Java 8, which is not supported for Jenkins Plugins

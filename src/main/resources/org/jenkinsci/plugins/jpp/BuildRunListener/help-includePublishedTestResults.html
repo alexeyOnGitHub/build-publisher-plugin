@@ -1,0 +1,30 @@
+<div>
+    Select this box to add test result summaries to the outgoing messages. Note that only <b>"published"</b> test
+    results
+    will be found by the plugin.
+    <ul>
+        <li>Native Maven build jobs automatically <b>publish</b> test results, no additional configuration necessary.
+        </li>
+        <li>Freestyle jobs require <b>additional</b> configuration:
+            need to add a Post-Build step to your Build Job(s) called "Publish JUnit test results report"
+            (provided by JUnit Plugin)
+            with something like "test-reports/*.xml" in "Test report XMLs" field (depending on where your custom job
+            saves results).
+        </li>
+    </ul>
+
+    <p>Sample JSon element that will be added to the message:
+<pre>
+  "test_results": {
+        "total_count": 13,
+        "skip_count": 0,
+        "fail_count": 3,
+        "failed_tests": [
+            "mychecks.MyServerTest--image--test_health_with_server_status_url",
+            "mychecks.MyServerTest--www4--test_health_with_server_status_url"
+        ]
+    }
+</pre>
+
+    </p>
+</div>

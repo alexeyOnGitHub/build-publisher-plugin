@@ -66,7 +66,8 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     }
 
     private void processBuildCompletedEvent(Run run) throws IOException, TimeoutException {
-        final String message = BuildMessageBuilder.buildMessage(run);
+        final boolean includePublishedTestResults = getDescriptor().isIncludePublishedTestResults();
+        final String message = BuildMessageBuilder.buildMessage(run, includePublishedTestResults);
 
         processor.setPublisher(createRabbitMQPublisher());
         boolean added = processor.addToOutgoingQueue(message);
@@ -81,6 +82,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     public static final class DescriptorImpl extends Descriptor<BuildRunListener> {
 
         private volatile boolean enabled;
+        private volatile boolean includePublishedTestResults;
         private volatile String rabbitMqServerName;
         private volatile int rabbitMqServerPort;
         private volatile String rabbitMqExchangeName;
@@ -100,6 +102,9 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             // we know it's a number because it passed validation
             rabbitMqServerPort = formData.getInt("rabbitMqServerPort");
             rabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
+
+            includePublishedTestResults = formData.getBoolean("includePublishedTestResults");
+
             save();
             LOG.info("Config updated. TODO: restart processor with the new data");
             // TODO restart Processor with the new data?
@@ -148,6 +153,10 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
         public String getRabbitMqExchangeName() {
             return rabbitMqExchangeName;
+        }
+
+        public boolean isIncludePublishedTestResults() {
+            return includePublishedTestResults;
         }
     }
 
