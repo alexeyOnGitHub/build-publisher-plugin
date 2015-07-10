@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
-public final class RabbitMQPublisher {
+public final class RabbitMQPublisher implements Publisher {
     private final static Logger LOG = Logger.getLogger(RabbitMQPublisher.class.getName());
 
     private static final AMQP.BasicProperties NO_PROPERTIES = null;
@@ -25,6 +25,7 @@ public final class RabbitMQPublisher {
         this.exchangeName = exchangeName;
     }
 
+    @Override
     public void publish(String message) throws IOException, TimeoutException {
         LOG.info("Publishing to Exchange '" + exchangeName + "' on host " + factory.getHost());
         Connection connection = factory.newConnection();

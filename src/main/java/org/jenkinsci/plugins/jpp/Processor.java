@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.jpp;
 
-import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
+import org.jenkinsci.plugins.jpp.publisher.Publisher;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -25,20 +25,20 @@ final class Processor {
 
     private volatile boolean started = false;
 
-    Processor(final RabbitMQPublisher publisher, int queueSize) {
+    Processor(final Publisher publisher, int queueSize) {
         messageQueue = new ArrayBlockingQueue<>(queueSize);
         service = Executors.newFixedThreadPool(NUMBER_OF_EXECUTORS);
         myRunnable = new MyRunnable(publisher);
     }
 
-    public void setPublisher(RabbitMQPublisher publisher) {
+    public void setPublisher(Publisher publisher) {
         myRunnable.setPublisher(publisher);
     }
 
     private class MyRunnable implements Runnable {
-        private volatile RabbitMQPublisher publisher;
+        private volatile Publisher publisher;
 
-        public MyRunnable(RabbitMQPublisher publisher) {
+        public MyRunnable(Publisher publisher) {
             this.publisher = publisher;
         }
 
@@ -66,7 +66,7 @@ final class Processor {
             }
         }
 
-        public void setPublisher(RabbitMQPublisher publisher) {
+        public void setPublisher(Publisher publisher) {
             this.publisher = publisher;
         }
     }
@@ -84,6 +84,9 @@ final class Processor {
         started = true;
     }
 
+// TODO this would not work then the queue is full and cannot accept more messages.
+// put() method would be waiting forever. fix this.
+
 //    void stop() throws InterruptedException {
 //        messageQueue.put(STOP_MESSAGE);
 //        service.shutdown();
@@ -96,6 +99,10 @@ final class Processor {
      */
     boolean addToOutgoingQueue(String message) {
         return messageQueue.offer(message);
+    }
+
+    int getQueueSize() {
+        return messageQueue.size();
     }
 
 }
