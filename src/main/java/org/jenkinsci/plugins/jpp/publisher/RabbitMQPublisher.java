@@ -26,15 +26,18 @@ public final class RabbitMQPublisher {
     }
 
     public void publish(String message) throws IOException, TimeoutException {
-        LOG.info("will publish to Exchange '" + exchangeName + "' on " + factory.getHost());
+        LOG.info("Publishing to Exchange '" + exchangeName + "' on host " + factory.getHost());
         Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
+        try {
+            Channel channel = connection.createChannel();
+            channel.exchangeDeclarePassive(exchangeName);
+            channel.basicPublish(exchangeName, NO_ROUTING_KEY, NO_PROPERTIES, message.getBytes());
+            LOG.info(" [x] Sent '" + message + "'");
 
-        channel.exchangeDeclarePassive(exchangeName);
-        channel.basicPublish(exchangeName, NO_ROUTING_KEY, NO_PROPERTIES, message.getBytes());
-        LOG.info(" [x] Sent '" + message + "'");
-
-        channel.close();
-        connection.close();
+            channel.close();
+        } finally {
+            // closing connection will close all its channels, according to its Javadoc.
+            connection.close();
+        }
     }
 }
