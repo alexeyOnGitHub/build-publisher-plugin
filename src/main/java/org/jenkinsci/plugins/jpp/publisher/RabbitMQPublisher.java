@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.jenkinsci.plugins.jpp.RabbitMQConfiguration;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -19,10 +20,12 @@ public final class RabbitMQPublisher implements Publisher {
 
     private final String exchangeName;
 
-    public RabbitMQPublisher(String rabbitMqHost, int rabbitMqPort, String exchangeName) {
-        factory.setHost(rabbitMqHost);
-        factory.setPort(rabbitMqPort);
-        this.exchangeName = exchangeName;
+    public RabbitMQPublisher(RabbitMQConfiguration config) {
+        factory.setHost(config.getServerName());
+        factory.setPort(config.getServerPort());
+        factory.setUsername(config.getUserName());
+        factory.setPassword(config.getPassword());
+        this.exchangeName = config.getExchangeName();
     }
 
     @Override

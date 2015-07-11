@@ -7,6 +7,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
@@ -20,6 +21,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static hudson.Util.fixEmpty;
 
 @Extension
 public class BuildRunListener extends RunListener<Run> implements Describable<BuildRunListener> {
@@ -36,10 +39,9 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         processor.start();
         getDescriptor().addListener(new RabbitMqConfigurationChangeListener() {
             @Override
-            public void onChanged(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName) {
+            public void onChanged(RabbitMQConfiguration config) {
                 LOG.info("RabbitMQ configuration was changed, updating the running thread. New values: server=" +
-                        rabbitMqServerName + " port=" + rabbitMqServerPort + " exchange=" + rabbitMqExchangeName);
-                LOG.info("processor = " + processor);
+                        config.getServerName() + " port=" + config.getServerPort() + " exchange=" + config.getExchangeName());
                 processor.setPublisher(createRabbitMQPublisher());
             }
         });
@@ -47,8 +49,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
     private RabbitMQPublisher createRabbitMQPublisher() {
         final DescriptorImpl descriptor = getDescriptor();
-        return new RabbitMQPublisher(descriptor.getRabbitMqServerName(),
-                descriptor.getRabbitMqServerPort(), descriptor.getRabbitMqExchangeName());
+        return new RabbitMQPublisher(descriptor.getRabbitMQConfiguration());
     }
 
     @Override
@@ -91,7 +92,7 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
     }
 
     private interface RabbitMqConfigurationChangeListener {
-        void onChanged(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName);
+        void onChanged(RabbitMQConfiguration configuration);
     }
 
     @Extension
@@ -107,6 +108,8 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         private volatile String rabbitMqServerName;
         private volatile int rabbitMqServerPort;
         private volatile String rabbitMqExchangeName;
+        private volatile String rabbitMqUserName;
+        private volatile Secret rabbitMqPassword;
 
         public DescriptorImpl() {
             load();
@@ -133,26 +136,32 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
         }
 
         private void processRabbitMqConfiguration(JSONObject formData) {
-            final String newRabbitMqServerName = formData.getString("rabbitMqServerName");
+            final String newServerName = formData.getString("rabbitMqServerName");
             // we know it's a number because it passed validation
-            final int newRabbitMqServerPort = formData.getInt("rabbitMqServerPort");
-            final String newRabbitMqExchangeName = formData.getString("rabbitMqExchangeName");
-
-            if (!
-                    (newRabbitMqServerName.equals(rabbitMqServerName)
-                            && newRabbitMqServerPort == rabbitMqServerPort
-                            && newRabbitMqExchangeName.equals(rabbitMqExchangeName))) {
-                // at least one parameter is changed
-                rabbitMqServerName = newRabbitMqServerName;
-                rabbitMqServerPort = newRabbitMqServerPort;
-                rabbitMqExchangeName = newRabbitMqExchangeName;
-                notifyListeners(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+            final int newServerPort = formData.getInt("rabbitMqServerPort");
+            final String newExchangeName = formData.getString("rabbitMqExchangeName");
+            final String newUserName = formData.getString("rabbitMqUserName");
+            final String newPassword = formData.getString("rabbitMqPassword");
+            final RabbitMQConfiguration newConfiguration = new RabbitMQConfiguration(newServerName,
+                    newServerPort, newUserName, newPassword, newExchangeName);
+            if (!getRabbitMQConfiguration().allFieldsEqual(newConfiguration)) {
+                rabbitMqServerName = newServerName;
+                rabbitMqServerPort = newServerPort;
+                rabbitMqExchangeName = newExchangeName;
+                rabbitMqUserName = newUserName;
+                rabbitMqPassword = fixEmpty(newPassword)!=null ? Secret.fromString(newPassword) : null;
+                notifyListeners(newConfiguration);
             }
         }
 
-        private void notifyListeners(String rabbitMqServerName, int rabbitMqServerPort, String rabbitMqExchangeName) {
+        private RabbitMQConfiguration getRabbitMQConfiguration() {
+            return new RabbitMQConfiguration(rabbitMqServerName, rabbitMqServerPort, rabbitMqUserName,
+                    Secret.toString(rabbitMqPassword), rabbitMqExchangeName);
+        }
+
+        private void notifyListeners(RabbitMQConfiguration configuration) {
             for (RabbitMqConfigurationChangeListener listener : listeners) {
-                listener.onChanged(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+                listener.onChanged(configuration);
             }
         }
 
@@ -186,9 +195,13 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
         public FormValidation doTestConnection(@QueryParameter("rabbitMqServerName") final String rabbitMqServerName,
                                                @QueryParameter("rabbitMqServerPort") final int rabbitMqServerPort,
+                                               @QueryParameter("rabbitMqUserName") final String rabbitMqUserName,
+                                               @QueryParameter("rabbitMqPassword") final String rabbitMqPassword,
                                                @QueryParameter("rabbitMqExchangeName") final String rabbitMqExchangeName) {
             try {
-                RabbitMQPublisher publisher = new RabbitMQPublisher(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+                final RabbitMQConfiguration config = new RabbitMQConfiguration(rabbitMqServerName,
+                        rabbitMqServerPort, rabbitMqUserName, rabbitMqPassword, rabbitMqExchangeName);
+                RabbitMQPublisher publisher = new RabbitMQPublisher(config);
                 publisher.publish("test from Jenkins Publisher Plugin");
                 return FormValidation.ok("Success");
             } catch (Exception e) {
@@ -198,6 +211,10 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
 
         public boolean isEnabled() {
             return enabled;
+        }
+
+        public boolean isIncludePublishedTestResults() {
+            return includePublishedTestResults;
         }
 
         public String getRabbitMqServerName() {
@@ -212,8 +229,12 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             return rabbitMqExchangeName;
         }
 
-        public boolean isIncludePublishedTestResults() {
-            return includePublishedTestResults;
+        public String getRabbitMqUserName() {
+            return rabbitMqUserName;
+        }
+
+        public String getRabbitMqPassword() {
+            return Secret.toString(rabbitMqPassword);
         }
     }
 
