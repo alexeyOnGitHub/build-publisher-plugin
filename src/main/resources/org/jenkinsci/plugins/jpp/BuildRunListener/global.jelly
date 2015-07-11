@@ -24,6 +24,10 @@
     <f:entry title="RabbitMQ exchange name" field="rabbitMqExchangeName">
        <f:textbox default="jenkins-exchange"/>
     </f:entry>
+    <f:validateButton
+            title="Test Connection By Sending Message" progress="Sending..."
+            method="testConnection" with="rabbitMqServerName,rabbitMqServerPort,rabbitMqExchangeName" />
+
     <f:entry title="Include summary of test results *published* the build pipeline" field="includePublishedTestResults">
       <f:checkbox />
     </f:entry>

@@ -184,6 +184,18 @@ public class BuildRunListener extends RunListener<Run> implements Describable<Bu
             return FormValidation.ok();
         }
 
+        public FormValidation doTestConnection(@QueryParameter("rabbitMqServerName") final String rabbitMqServerName,
+                                               @QueryParameter("rabbitMqServerPort") final int rabbitMqServerPort,
+                                               @QueryParameter("rabbitMqExchangeName") final String rabbitMqExchangeName) {
+            try {
+                RabbitMQPublisher publisher = new RabbitMQPublisher(rabbitMqServerName, rabbitMqServerPort, rabbitMqExchangeName);
+                publisher.publish("test from Jenkins Publisher Plugin");
+                return FormValidation.ok("Success");
+            } catch (Exception e) {
+                return FormValidation.error("Cannot send test message: " + e.toString());
+            }
+        }
+
         public boolean isEnabled() {
             return enabled;
         }
