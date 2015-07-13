@@ -15,6 +15,9 @@
     <f:entry title="Send notifications to RabbitMQ for each completed build" field="enabled">
       <f:checkbox />
     </f:entry>
+    <f:entry title="Include summary of test results *published* the build pipeline" field="includePublishedTestResults">
+      <f:checkbox />
+    </f:entry>
     <f:entry title="RabbitMQ server name" field="rabbitMqServerName">
        <f:textbox />
     </f:entry>
@@ -34,10 +37,6 @@
     <f:validateButton
             title="Test Connection By Sending Message" progress="Sending..."
             method="testConnection" with="rabbitMqServerName,rabbitMqServerPort,rabbitMqUserName,rabbitMqPassword,rabbitMqExchangeName" />
-
-    <f:entry title="Include summary of test results *published* the build pipeline" field="includePublishedTestResults">
-      <f:checkbox />
-    </f:entry>
 
   </f:section>
 </j:jelly>
