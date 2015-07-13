@@ -15,7 +15,7 @@ apply plugin: 'org.jenkins-ci.jpi'
 
 group = "org.jenkins-ci.plugins"
 version = "0.0.1-SNAPSHOT"
-description = "Jenkins Publisher Plugin. Publish notifications about each completed build to RabbitMQ."
+description = "Build Result Publisher Plugin. Publish notifications about each completed build to RabbitMQ."
 
 dependencies {
     // for RabbitMQ Publisher
@@ -37,7 +37,7 @@ dependencies {
 jenkinsPlugin {
     // Version of Jenkins core this plugin depends on.
     coreVersion = '1.580.3'
-    displayName = 'Jenkins Publisher Plugin'                // Human-readable name of plugin.
+    displayName = 'Build Result Publisher Plugin'                // Human-readable name of plugin.
     url = 'https://github.com/alexeyOnGitHub/jenkins-publisher-plugin'   // URL for plugin on Jenkins wiki or elsewhere.
     gitHubUrl = 'https://github.com/alexeyOnGitHub/jenkins-publisher-plugin'  // Plugin URL on GitHub. Optional.
 
