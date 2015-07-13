@@ -1,4 +1,4 @@
-# Build Result Publisher Plugin
+# Build Publisher Plugin
 
 Jenkins plugin to publish notifications for all completed builds to a RabbitMQ instance.
 
