@@ -17,6 +17,10 @@ group = "org.jenkins-ci.plugins"
 version = "0.0.1-SNAPSHOT"
 description = "Build Publisher Plugin. Publish notifications about all completed builds to RabbitMQ."
 
+// Jenkins 1.580+ still uses Java 7, not Java 8.
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 dependencies {
     // for RabbitMQ Publisher
     compile('com.rabbitmq:amqp-client:3.5.3',
