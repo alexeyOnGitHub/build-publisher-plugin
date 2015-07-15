@@ -29,14 +29,19 @@ Sample notification message:
       }
     }
 
+## Plugin requirements.
+
+* Jenkins core version: 1.580.3+
+* Java 7
+
 ## RabbitMQ configuration.
 
-You need to provide
+You need to provide:
 
 * RabbitMQ server name (or IP address)
 * RabbitMQ server port number for notifications (5672 in default RabbitMQ configuration)
 * User Name - note that this user must be authorized to publish to the Exchange (see below)
-* User Password
+* User Password. Will be stored on disk in encrypted format.
 * Exchange Name. This is similar to "queue", but one level higher: once you publish message to an "Exchange",
 it will be routed by RabbitMQ to proper queue(s). This field must contain an Exchange name that already exist
 on the RabbitMQ server.
