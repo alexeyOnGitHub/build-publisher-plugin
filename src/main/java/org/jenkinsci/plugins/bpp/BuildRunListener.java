@@ -28,7 +28,7 @@ import static hudson.Util.fixEmpty;
 public class BuildRunListener extends RunListener<Run> implements Describable<BuildRunListener> {
 
     private final static Logger LOG = Logger.getLogger(BuildRunListener.class.getName());
-    private final static Integer QUEUE_SIZE = 10;
+    private final static Integer QUEUE_SIZE = 1000;
 
     private final Processor processor;
 
