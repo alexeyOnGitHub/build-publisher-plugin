@@ -29,6 +29,20 @@ Sample notification message:
       }
     }
 
+## RabbitMQ configuration.
+
+You need to provide
+
+* RabbitMQ server name (or IP address)
+* RabbitMQ server port number for notifications (5672 in default RabbitMQ configuration)
+* User Name - note that this user must be authorized to publish to the Exchange (see below)
+* User Password
+* Exchange Name. This is similar to "queue", but one level higher: once you publish message to an "Exchange",
+it will be routed by RabbitMQ to proper queue(s). This field must contain an Exchange name that already exist
+on the RabbitMQ server.
+See http://www.rabbitmq.com/tutorials/tutorial-three-java.html about exchanges.
+
+
 ## Logging.
 
 You can create a separate Log recorder in your Jenkins (menu "Manage Jenkins" -> "System Log" -> "Add new log recorder"). 
