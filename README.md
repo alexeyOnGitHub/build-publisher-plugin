@@ -32,8 +32,7 @@ Sample notification message:
 ## How to install the plugin
 
 At this moment the plugin is not available in Jenkins Plugins repository.
-You can build it from source (see [Building the plugin from source code]() below). I will publish a release version to
- Releases section of this repository soon.
+You can build it from source (see [Building the plugin from source code](#building-the-plugin-from-source-code) below). I will publish a release version to Releases section of this repository soon.
 
 ## Plugin requirements.
 
