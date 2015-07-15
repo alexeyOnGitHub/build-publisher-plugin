@@ -1,7 +1,7 @@
-package org.jenkinsci.plugins.jpp;
+package org.jenkinsci.plugins.bpp;
 
-import org.jenkinsci.plugins.jpp.publisher.CountingPublisher;
-import org.jenkinsci.plugins.jpp.publisher.DevNullPublisher;
+import org.jenkinsci.plugins.bpp.publisher.CountingPublisher;
+import org.jenkinsci.plugins.bpp.publisher.DevNullPublisher;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

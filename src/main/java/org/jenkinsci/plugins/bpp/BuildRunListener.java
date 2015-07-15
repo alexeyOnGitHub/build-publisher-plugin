@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.jpp;
+package org.jenkinsci.plugins.bpp;
 
 import hudson.Extension;
 import hudson.model.Describable;
@@ -10,7 +10,7 @@ import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.jpp.publisher.RabbitMQPublisher;
+import org.jenkinsci.plugins.bpp.publisher.RabbitMQPublisher;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 

@@ -1,6 +1,6 @@
-package org.jenkinsci.plugins.jpp;
+package org.jenkinsci.plugins.bpp;
 
-import org.jenkinsci.plugins.jpp.publisher.Publisher;
+import org.jenkinsci.plugins.bpp.publisher.Publisher;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;

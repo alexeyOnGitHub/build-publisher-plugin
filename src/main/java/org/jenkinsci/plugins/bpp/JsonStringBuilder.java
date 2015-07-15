@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.jpp;
+package org.jenkinsci.plugins.bpp;
 
 import org.json.JSONException;
 import org.json.JSONWriter;

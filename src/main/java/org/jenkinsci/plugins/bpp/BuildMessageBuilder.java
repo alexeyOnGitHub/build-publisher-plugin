@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.jpp;
+package org.jenkinsci.plugins.bpp;
 
 import hudson.model.Job;
 import hudson.model.ParameterValue;

@@ -1,6 +1,6 @@
-package org.jenkinsci.plugins.jpp.publisher;
+package org.jenkinsci.plugins.bpp.publisher;
 
-import org.jenkinsci.plugins.jpp.RabbitMQConfiguration;
+import org.jenkinsci.plugins.bpp.RabbitMQConfiguration;
 import org.junit.Test;
 
 public class RabbitMQPublisherIT {

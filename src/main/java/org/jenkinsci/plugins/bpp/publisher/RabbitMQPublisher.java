@@ -1,10 +1,10 @@
-package org.jenkinsci.plugins.jpp.publisher;
+package org.jenkinsci.plugins.bpp.publisher;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.jenkinsci.plugins.jpp.RabbitMQConfiguration;
+import org.jenkinsci.plugins.bpp.RabbitMQConfiguration;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
