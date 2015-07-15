@@ -29,6 +29,12 @@ Sample notification message:
       }
     }
 
+## How to install the plugin
+
+At this moment the plugin is not available in Jenkins Plugins repository.
+You can build it from source (see [Building the plugin from source code] below). I will publish a release version to
+ Releases section of this repository soon.
+
 ## Plugin requirements.
 
 * Jenkins core version: 1.580.3+
@@ -54,5 +60,14 @@ You can create a separate Log recorder in your Jenkins (menu "Manage Jenkins" ->
 Name it "Build Publisher Plugin" or whatever you want, then click "Add" to add a new Logger with this pattern:
 
     org.jenkinsci.plugins.bpp  
+
+## Building the plugin from source code
+
+You need to have Gradle 2.5+ to build the plugin. Clone this repository and run in the project folder:
+ 
+    gradle jpi -x test
+   
+This will create build/libs/jenkins-publisher.hpi file, which you can upload from your computer on the Advanced tab of Manage Plugins Jenkins page.
+"-x test" option tells Gradle to skip tests.
 
 
