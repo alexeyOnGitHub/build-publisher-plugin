@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.bpp.publisher;
 
 import org.jenkinsci.plugins.bpp.RabbitMQConfiguration;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class RabbitMQPublisherIT {
@@ -11,6 +12,14 @@ public class RabbitMQPublisherIT {
     private static final String USER_NAME = "test";
     private static final String PASSWORD = "test";
 
+    /**
+     * This integration test is ignored because it requires a specific RabbitMQ configuration which
+     * may not be available to all those who want to run the build locally.
+     *
+     * It should not be deleted because it can still be useful to be run manually every once in a while -
+     * say, with a newer RabbitMQ Client library version just to check that it still works for us.
+     */
+    @Ignore
     @Test
     public void canPublishToRabbitMQ() throws Exception {
         // for now just check that there are no exceptions when publishing
