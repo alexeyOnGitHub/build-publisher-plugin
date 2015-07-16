@@ -2,11 +2,14 @@
 
 Jenkins plugin to publish notifications for all completed builds to a RabbitMQ instance.
 
-It is configured on the main Jenkins "Configure System" page and listens to all jobs controlled by this host
-(which can run locally or on remote nodes).
+It listens to all jobs controlled by this Jenkins host (which can run locally or on remote nodes).
 Once a job completes, it puts a message to the queue that is processed in a separate thread. 
 This way processing and publishing (which can be slow, depending on the target system) does not block or slow down
 the Jenkins server.
+
+Configuration is done on the main Jenkins "Configure System" page.
+Changing the plugin configuration does not require restarting your Jenkins server. New configuration will
+take effect immediately for all messages waiting in the queue.
 
 If the queue gets full, the plugin will write a message to log and discard the build notification.  
 
